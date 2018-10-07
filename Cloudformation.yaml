@@ -1,0 +1,117 @@
+
+AWSTemplateFormatVersion: '05-09-2010'
+Description: This stack deploys a devops stack
+
+Mappings:
+  CIDR:
+    VPC: "10.0.0.0/16"
+    publicSubnet: "10.0.0.0/23"
+    privateSubnet: "10.0.2.0/23"
+      
+Resources:
+
+ VPC:
+   Type: AWS::EC2::VPC
+   Properties:
+     CidrBlock: !FindInMap ['CIDR', 'VPC']
+     EnableDnsSupport: true
+     Tags:
+       - Key: vpc_name
+         Value: my_vpc 
+ publicSubnet:
+     Type: AWS::EC2::Subnet
+     Properties:
+       VpcId: !Ref 'VPC'
+       CidrBlock: !FindInMap ['CIDR', 'publicSubnet']
+       MapPublicIpOnLaunch: true
+       Tags:
+         - Key: subnetName
+           Value: public 
+ privateSubnet:
+     Type: AWS::EC2::Subnet
+     Properties:
+       VpcId: !Ref 'VPC'
+       CidrBlock: !FindInMap ['CIDR', 'privateSubnet']
+       Tags:
+         - Key: subnetName
+           Value: private 
+ 
+ InternetGateway:
+     Type: AWS::EC2::InternetGateway
+ GatewayAttachement:
+     Type: AWS::EC2::VPCGatewayAttachment
+     Properties:
+       VpcId: !Ref 'VPC'
+       InternetGatewayId: !Ref 'InternetGateway'
+ PublicRouteTable:
+     Type: AWS::EC2::RouteTable
+     Properties:
+       VpcId: !Ref 'VPC'
+ PublicRoute:
+     Type: AWS::EC2::Route
+     DependsOn: GatewayAttachement
+     Properties:
+       RouteTableId: !Ref 'PublicRouteTable'
+       DestinationCidrBlock: '0.0.0.0/0'
+       GatewayId: !Ref 'InternetGateway'
+ PublicSubnetRouteTableAssociation:
+     Type: AWS::EC2::SubnetRouteTableAssociation
+     Properties:
+       SubnetId: !Ref PublicSubnet
+       RouteTableId: !Ref PublicRouteTable
+ 
+ 
+   # Setup networking resources for the private subnets. Containers
+   # in these subnets have only private IP addresses, and must use a NAT
+   # gateway to talk to the internet. We launch two NAT gateways, one for
+   # each private subnet.
+ NatGatewayOneAttachment:
+     Type: AWS::EC2::EIP
+     DependsOn: GatewayAttachement
+     Properties:
+         Domain: vpc
+ NatGatewayTwoAttachment:
+     Type: AWS::EC2::EIP
+     DependsOn: GatewayAttachement
+     Properties:
+         Domain: vpc
+ NatGatewayOne:
+     Type: AWS::EC2::NatGateway
+     Properties:
+       AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
+       SubnetId: !Ref privateSubnet
+   
+ PrivateRouteTableOne:
+     Type: AWS::EC2::RouteTable
+     Properties:
+       VpcId: !Ref 'VPC'
+ PrivateRouteOne:
+     Type: AWS::EC2::Route
+     Properties:
+       RouteTableId: !Ref PrivateRouteTableOne
+       DestinationCidrBlock: 0.0.0.0/0
+       NatGatewayId: !Ref NatGatewayOne
+ PrivateRouteTableOneAssociation:
+     Type: AWS::EC2::SubnetRouteTableAssociation
+     Properties:
+       RouteTableId: !Ref PrivateRouteTableOne
+       SubnetId: !Ref PrivateSubnet
+   
+ 
+ jenkins:
+   Type: AWS::EC2::Instance
+   Properties:
+     KeyName: "siamol"
+     DisableApiTermination: true
+     ImageId:   
+     InstanceType: "t2.medium"
+     Monitoring: false
+     SecurityGroupIds:
+       - sg-id
+     Userdata: !Base64 |
+       #!/bin/bash -ex
+       # put your script here
+     Tags:
+       - Key: Name 
+         Value: Jenkins
+     SubnetId: !Ref publicSubnet    
