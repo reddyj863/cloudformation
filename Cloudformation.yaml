@@ -1,5 +1,5 @@
 
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: '05-09-2010'
 Description: This stack deploys a devops stack
 
 Mappings:
@@ -70,11 +70,7 @@ Resources:
      DependsOn: GatewayAttachement
      Properties:
          Domain: vpc
- NatGatewayTwoAttachment:
-     Type: AWS::EC2::EIP
-     DependsOn: GatewayAttachement
-     Properties:
-         Domain: vpc
+ 
  NatGatewayOne:
      Type: AWS::EC2::NatGateway
      Properties:
@@ -143,8 +139,6 @@ Resources:
      Tags:
        - Key: Name 
          Value: BastonHost
-       - Key: Environment
-         Value: production
      SubnetId: !Ref publicSubnet  
      
   jenkins:
@@ -163,8 +157,6 @@ Resources:
      Tags:
        - Key: Name 
          Value: Jenkins
-       - Key: Environment
-         Value: production
      SubnetId: !Ref publicSubnet    
      
   redshift:
@@ -199,6 +191,8 @@ Resources:
          PubliclyAccessible: Boolean
          SnapshotClusterIdentifier: String
          SnapshotIdentifier: String
+         Tags:
+           - Resource Tag
          VpcSecurityGroupIds:
            - String
   EMRCluster: 
@@ -236,4 +230,17 @@ Resources:
                     FROM swfmetadata
                     WHERE year='17' AND GROUP BY workflowname
                     ORDER BY AverageWorkflow DESC LIMIT 10
+
+  s3Bucket1:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: AuthenticatedRead
+  s3Bucket2:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: AuthenticatedRead
+  s3Bucket3:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: AuthenticatedRead                  
        
