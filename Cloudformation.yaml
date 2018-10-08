@@ -7,6 +7,7 @@ Mappings:
     VPC: "10.0.0.0/16"
     publicSubnet: "10.0.0.0/23"
     privateSubnet: "10.0.2.0/23"
+    internet: "0.0.0.0/0"
       
 Resources:
 
@@ -96,8 +97,55 @@ Resources:
      Properties:
        RouteTableId: !Ref PrivateRouteTableOne
        SubnetId: !Ref PrivateSubnet
+       
+ JenkinsSecurityGroupPublic:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: Allow 8080 traffic from public  
+    VpcId:
+      Ref: 'VPC'
+    SecurityGroupIngress:
+    - IpProtocol: tcp
+      FromPort: 0
+      ToPort: 8080
+      CidrIp: !FindInMap ['CIDR', 'internet']
+    SecurityGroupEgress:
+    - IpProtocol: tcp
+      FromPort: 0
+      ToPort: 0
+      CidrIp: 0.0.0.0/0
+ BastonHostSecurityGroupPublic:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: Allow 22 traffic from public  
+    VpcId:
+      Ref: 'VPC'
+    SecurityGroupIngress:
+    - IpProtocol: tcp
+      FromPort: 0
+      ToPort: 22
+      CidrIp: !FindInMap ['CIDR', 'internet']
+    SecurityGroupEgress:
+    - IpProtocol: tcp
+      FromPort: 0
+      ToPort: 0
+      CidrIp: 0.0.0.0/0
    
- 
+  BastonHost:
+   Type: AWS::EC2::Instance
+   Properties:
+     KeyName: "A different key here"
+     DisableApiTermination: true
+     ImageId:   
+     InstanceType: "t2.medium"
+     Monitoring: false
+     SecurityGroupIds:
+       - !Ref BastonHostSecurityGroupPublic
+     Tags:
+       - Key: Name 
+         Value: BastonHost
+     SubnetId: !Ref publicSubnet  
+     
  jenkins:
    Type: AWS::EC2::Instance
    Properties:
@@ -107,7 +155,7 @@ Resources:
      InstanceType: "t2.medium"
      Monitoring: false
      SecurityGroupIds:
-       - sg-id
+       - !Ref JenkinsSecurityGroupPublic
      Userdata: !Base64 |
        #!/bin/bash -ex
        # put your script here
