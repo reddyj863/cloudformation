@@ -1,5 +1,5 @@
 
-AWSTemplateFormatVersion: '05-09-2010'
+AWSTemplateFormatVersion: '2010-09-09'
 Description: This stack deploys a devops stack
 
 Mappings:
@@ -143,6 +143,8 @@ Resources:
      Tags:
        - Key: Name 
          Value: BastonHost
+       - Key: Environment
+         Value: production
      SubnetId: !Ref publicSubnet  
      
   jenkins:
@@ -161,6 +163,8 @@ Resources:
      Tags:
        - Key: Name 
          Value: Jenkins
+       - Key: Environment
+         Value: production
      SubnetId: !Ref publicSubnet    
      
   redshift:
@@ -195,8 +199,6 @@ Resources:
          PubliclyAccessible: Boolean
          SnapshotClusterIdentifier: String
          SnapshotIdentifier: String
-         Tags:
-           - Resource Tag
          VpcSecurityGroupIds:
            - String
   EMRCluster: 
