@@ -64,8 +64,7 @@ Resources:
  
    # Setup networking resources for the private subnets. Containers
    # in these subnets have only private IP addresses, and must use a NAT
-   # gateway to talk to the internet. We launch two NAT gateways, one for
-   # each private subnet.
+   # gateway to talk to the internet. 
  NatGatewayOneAttachment:
      Type: AWS::EC2::EIP
      DependsOn: GatewayAttachement
@@ -146,7 +145,7 @@ Resources:
          Value: BastonHost
      SubnetId: !Ref publicSubnet  
      
- jenkins:
+  jenkins:
    Type: AWS::EC2::Instance
    Properties:
      KeyName: "siamol"
@@ -163,3 +162,65 @@ Resources:
        - Key: Name 
          Value: Jenkins
      SubnetId: !Ref publicSubnet    
+     
+  redshift:
+   Type: "AWS::Redshift::Cluster"
+   Properties: 
+         AutomatedSnapshotRetentionPeriod: Integer
+         AvailabilityZone: String
+         ClusterIdentifier: String
+         ClusterParameterGroupName: String
+         ClusterSecurityGroups: 
+           - String
+         ClusterSubnetGroupName: String
+         ClusterType: String
+         ClusterVersion: String
+         DBName: String
+         ElasticIp: String
+         Encrypted: Boolean
+         HsmClientCertificateIdentifier: String
+         HsmConfigurationIdentifier: String
+         IamRoles: 
+           - String
+         KmsKeyId: String
+         LoggingProperties: 
+            LoggingProperties
+         MasterUsername: String
+         MasterUserPassword: String
+         NodeType: String
+         NumberOfNodes: Integer
+         OwnerAccount: String
+         Port: Integer
+         PreferredMaintenanceWindow: String
+         PubliclyAccessible: Boolean
+         SnapshotClusterIdentifier: String
+         SnapshotIdentifier: String
+         Tags:
+           - Resource Tag
+         VpcSecurityGroupIds:
+           - String
+  EMRCluster: 
+   Type: AWS::EMR::Cluster
+   Properties: 
+    Instances: 
+      MasterInstanceGroup: 
+        InstanceCount: 1
+        InstanceType: "m3.xlarge"
+        Market: "ON_DEMAND"
+        Name: "Master"
+      CoreInstanceGroup: 
+        InstanceCount: 2
+        InstanceType: "m3.xlarge"
+        Market: "ON_DEMAND"
+        Name: "Core"
+      TerminationProtected: true
+    Name: "EMR_CLUSTER"
+    JobFlowRole: "EMR_EC2_DefaultRole"
+    ServiceRole: "EMR_DefaultRole"
+    ReleaseLabel: "emr-4.2.0"
+    Tags: 
+      - 
+        Key: "Environment"
+        Value: "production"
+
+       
