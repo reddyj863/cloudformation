@@ -108,7 +108,7 @@ Resources:
     - IpProtocol: tcp
       FromPort: 0
       ToPort: 0
-      CidrIp: 0.0.0.0/0
+      CidrIp: !FindInMap ['CIDR', 'internet']
  BastonHostSecurityGroupPublic:
   Type: AWS::EC2::SecurityGroup
   Properties:
@@ -124,7 +124,7 @@ Resources:
     - IpProtocol: tcp
       FromPort: 0
       ToPort: 0
-      CidrIp: 0.0.0.0/0
+      CidrIp: !FindInMap ['CIDR', 'internet']
    
   BastonHost:
    Type: AWS::EC2::Instance
